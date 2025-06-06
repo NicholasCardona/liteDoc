@@ -1,4 +1,4 @@
-module jsonCache
+module liteDoc
 
 go 1.24.3
 

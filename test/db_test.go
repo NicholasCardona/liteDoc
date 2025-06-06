@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"jsonCache/pkg/db"
+	"liteDoc/pkg/db"
 )
 
 var test_path string = "test_data.gob"

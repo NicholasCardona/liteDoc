@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"jsonCache/pkg/db"
+	"liteDoc/pkg/db"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
