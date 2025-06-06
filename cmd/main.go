@@ -21,15 +21,17 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/store", handlePost).Methods("POST")
-	r.HandleFunc("/store/{id}", handleGet).Methods("GET")
-	r.HandleFunc("/store/{id}", handleDelete).Methods("DELETE")
+	r.HandleFunc("/store", add).Methods("POST")
+	r.HandleFunc("/store/{id}", get1).Methods("GET")
+	r.HandleFunc("/store/{id}", delete1).Methods("DELETE")
+	r.HandleFunc("/store/{id}", edit).Methods("PUT")
+	r.HandleFunc("/query", handleQuery).Methods("POST")
 
 	fmt.Println("Listening on port :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
+func add(w http.ResponseWriter, r *http.Request) {
 	var data map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "invalid JSON format", http.StatusBadRequest)
@@ -45,7 +47,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"id": id})
 }
 
-func handleGet(w http.ResponseWriter, r *http.Request) {
+func get1(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -59,7 +61,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func handleDelete(w http.ResponseWriter, r *http.Request) {
+func delete1(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -72,4 +74,40 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	db.SaveData("./sdata.gob")
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func edit(w http.ResponseWriter, r *http.Request) {
+	var data map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if _, exists := db.Store[id]; !exists {
+		http.Error(w, "ID not found", http.StatusNotFound)
+		return
+	}
+
+	// Update the existing data
+	db.Store[id] = data
+	db.SaveData("./data.gob")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"id": id})
+}
+
+func handleQuery(w http.ResponseWriter, r *http.Request) {
+	var query map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
+		http.Error(w, "invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	results := db.Find(query)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }

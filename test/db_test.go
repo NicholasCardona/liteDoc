@@ -121,3 +121,66 @@ func TestInsertNastierObj(t *testing.T) {
 	// cleanup
 	os.Remove(test_path)
 }
+
+func TestFindWhereEq(t *testing.T) {
+	db.Store = map[string]interface{}{
+		"1": map[string]interface{}{"name": "Alice", "age": 30},
+		"2": map[string]interface{}{"name": "Bob", "age": 25},
+		"3": map[string]interface{}{"name": "Charlie", "age": 30},
+	}
+	query := map[string]interface{}{"name": "Alice"}
+	results := db.Find(query)
+	if len(results) != 1 || results[0]["name"] != "Alice" {
+		t.Errorf("Expected 1 result with name 'Alice', got %v results", results)
+	}
+}
+
+func TestFindWhereLte(t *testing.T) {
+	db.Store = map[string]interface{}{
+		"1": map[string]interface{}{"name": "Alice", "age": 30},
+		"2": map[string]interface{}{"name": "Bob", "age": 25},
+		"3": map[string]interface{}{"name": "Charlie", "age": 20},
+	}
+	query := map[string]interface{}{"age": map[string]interface{}{"$lte": 25}}
+	results := db.Find(query)
+	if len(results) != 2 {
+		t.Errorf("Expected 2 results, got %d", len(results))
+	}
+
+	if results[0]["age"] != 25 && results[1]["age"] != 20 {
+		t.Errorf("Expected ages 25 and 20, got %v", results)
+	}
+}
+
+func TestFindWhereGte(t *testing.T) {
+	db.Store = map[string]interface{}{
+		"1": map[string]interface{}{"name": "Alice", "age": 30},
+		"2": map[string]interface{}{"name": "Bob", "age": 25},
+		"3": map[string]interface{}{"name": "Charlie", "age": 20},
+	}
+	query := map[string]interface{}{"age": map[string]interface{}{"$gte": 25}}
+	results := db.Find(query)
+	if len(results) != 2 {
+		t.Errorf("Expected 2 results, got %d", len(results))
+	}
+
+	if (results[0]["age"] != 30 || results[1]["age"] != 25) && (results[0]["age"] != 25 || results[1]["age"] != 30) {
+		t.Errorf("Expected ages 30 and 25, got %v", results)
+	}
+}
+
+func TestFindWithMultipleConditions(t *testing.T) {
+	db.Store = map[string]interface{}{
+		"1": map[string]interface{}{"name": "Alice", "age": 30},
+		"2": map[string]interface{}{"name": "Bob", "age": 25},
+		"3": map[string]interface{}{"name": "Charlie", "age": 30},
+	}
+	query := map[string]interface{}{
+		"name": "Alice",
+		"age":  map[string]interface{}{"$gte": 20},
+	}
+	results := db.Find(query)
+	if len(results) != 1 || results[0]["name"] != "Alice" {
+		t.Errorf("Expected 1 result with name 'Alice', got %v results", results)
+	}
+}
